@@ -12,6 +12,7 @@ The brand file must stay valid JSON. Regular JSON comments are not supported by 
 - `people`: Voice and TTS defaults for generated narration.
 - `prompts`: Brand-specific prompt instructions used during manuscript and placement generation.
 - `player`: Visual identity, logo, transitions, colors, and optional background music.
+- `tts_provider`: (optional) TTS provider to use for this brand. Choose from `elevenlabs` (default) or `beyondwords`.
 
 ## Player Fields
 
