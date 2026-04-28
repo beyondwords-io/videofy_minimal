@@ -24,6 +24,9 @@ class Settings(BaseSettings):
 
     elevenlabs_api_key: str = ""
 
+    beyondwords_api_key: str = ""
+    beyondwords_project_id: str = ""
+
     ffmpeg_bin: str = "ffmpeg"
     ffprobe_bin: str = "ffprobe"
 

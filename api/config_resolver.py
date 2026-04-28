@@ -25,6 +25,7 @@ class ResolvedConfig:
     segment_pause_seconds: float
     player: dict[str, Any]
     export_defaults: dict[str, Any]
+    tts_provider: str = "elevenlabs"
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -85,28 +86,37 @@ class ConfigResolver:
         if pause is None:
             pause = float(options.get("segmentPauseSeconds", 0.4))
 
-        voice_id = default_person.get("voice")
-        if not isinstance(voice_id, str) or not voice_id:
-            raise ConfigResolverError(
-                f"Brand '{manifest.brandId}' must define people.default.voice"
-            )
+        tts_provider = str(brand.get("tts_provider", "elevenlabs"))
 
+        voice_id_raw = default_person.get("voice")
         voice_settings: dict[str, Any] = {}
-        for key in ("stability", "similarity_boost", "style"):
-            value = default_person.get(key)
-            if isinstance(value, (int, float)):
-                voice_settings[key] = value
-        use_speaker_boost = default_person.get("use_speaker_boost")
-        if isinstance(use_speaker_boost, bool):
-            voice_settings["use_speaker_boost"] = use_speaker_boost
+        tts_model_id: str = ""
 
-        tts_model_id = default_person.get("model_id")
-        if not isinstance(tts_model_id, str) or not tts_model_id:
-            tts_model_id = default_person.get("modelId")
-        if not isinstance(tts_model_id, str) or not tts_model_id:
-            raise ConfigResolverError(
-                f"Brand '{manifest.brandId}' must define people.default.model_id"
-            )
+        if tts_provider == "beyondwords":
+            voice_id = str(voice_id_raw) if isinstance(voice_id_raw, (str, int)) and voice_id_raw else ""
+            tts_model_id = ""
+        else:
+            voice_id = voice_id_raw
+            if not isinstance(voice_id, str) or not voice_id:
+                raise ConfigResolverError(
+                    f"Brand '{manifest.brandId}' must define people.default.voice"
+                )
+
+            for key in ("stability", "similarity_boost", "style"):
+                value = default_person.get(key)
+                if isinstance(value, (int, float)):
+                    voice_settings[key] = value
+            use_speaker_boost = default_person.get("use_speaker_boost")
+            if isinstance(use_speaker_boost, bool):
+                voice_settings["use_speaker_boost"] = use_speaker_boost
+
+            tts_model_id = default_person.get("model_id")
+            if not isinstance(tts_model_id, str) or not tts_model_id:
+                tts_model_id = default_person.get("modelId")
+            if not isinstance(tts_model_id, str) or not tts_model_id:
+                raise ConfigResolverError(
+                    f"Brand '{manifest.brandId}' must define people.default.model_id"
+                )
 
         manuscript_model = str(openai_cfg.get("manuscriptModel", "gpt-4o-mini"))
         media_model = str(openai_cfg.get("mediaModel", manuscript_model))
@@ -128,4 +138,5 @@ class ConfigResolver:
             segment_pause_seconds=float(pause),
             player=player,
             export_defaults=export_defaults,
+            tts_provider=tts_provider,
         )

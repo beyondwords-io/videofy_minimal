@@ -110,7 +110,7 @@ export const segmentSchema = z.object({
 export const manuscriptSchema = z.object({
   meta: z.object({
     title: z.string(),
-    pubdate: z.string().datetime(),
+    pubdate: z.iso.datetime({ offset: true }),
     byline: z.string(),
     articleUrl: z.string().optional(),
     uniqueId: z.string().optional(),

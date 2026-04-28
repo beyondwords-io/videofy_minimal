@@ -30,6 +30,43 @@ def test_brand_people_default_overrides_elevenlabs_voice_defaults(tmp_path: Path
     assert resolved.media_model == "gpt-4o"
 
 
+def test_beyondwords_provider_does_not_require_voice_and_model(tmp_path: Path):
+    config_root = tmp_path / "brands"
+    config_root.mkdir(parents=True, exist_ok=True)
+    (config_root / "default.json").write_text(
+        '{"tts_provider":"beyondwords","openai":{"manuscriptModel":"gpt-4o-mini","mediaModel":"gpt-4o"},"people":{"default":{"voice":"12345"}},"prompts":{"scriptPrompt":"prompt"}}',
+        encoding="utf-8",
+    )
+
+    resolver = ConfigResolver(config_root)
+    manifest = GenerationManifest(projectId="demo")
+
+    resolved = resolver.resolve(manifest)
+
+    assert resolved.tts_provider == "beyondwords"
+    assert resolved.voice_id == "12345"
+    assert resolved.tts_model_id == ""
+    assert resolved.voice_settings == {}
+
+
+def test_beyondwords_provider_works_without_voice(tmp_path: Path):
+    config_root = tmp_path / "brands"
+    config_root.mkdir(parents=True, exist_ok=True)
+    (config_root / "default.json").write_text(
+        '{"tts_provider":"beyondwords","openai":{"manuscriptModel":"gpt-4o-mini","mediaModel":"gpt-4o"},"people":{"default":{}},"prompts":{"scriptPrompt":"prompt"}}',
+        encoding="utf-8",
+    )
+
+    resolver = ConfigResolver(config_root)
+    manifest = GenerationManifest(projectId="demo")
+
+    resolved = resolver.resolve(manifest)
+
+    assert resolved.tts_provider == "beyondwords"
+    assert resolved.voice_id == ""
+    assert resolved.tts_model_id == ""
+
+
 def test_brand_must_define_voice_and_model(tmp_path: Path):
     config_root = tmp_path / "brands"
     config_root.mkdir(parents=True, exist_ok=True)

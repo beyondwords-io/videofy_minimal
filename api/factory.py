@@ -15,7 +15,7 @@ from .llm_service import LLMService
 from .pipeline import PipelineService
 from .project_store import ProjectStore
 from .settings import Settings, get_settings
-from .tts_service import ElevenLabsService
+from .tts_service import BeyondWordsService, ElevenLabsService
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -32,6 +32,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ffprobe_bin=settings.ffprobe_bin,
         ffmpeg_bin=settings.ffmpeg_bin,
     )
+    beyondwords_tts = None
+    if settings.beyondwords_api_key and settings.beyondwords_project_id:
+        beyondwords_tts = BeyondWordsService(
+            api_key=settings.beyondwords_api_key,
+            project_id=settings.beyondwords_project_id,
+            ffprobe_bin=settings.ffprobe_bin,
+            ffmpeg_bin=settings.ffmpeg_bin,
+        )
     asset_analysis = AssetAnalysisService(
         store=store,
         openai_api_key=settings.openai_api_key,
@@ -46,6 +54,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         tts_service=tts,
         config_resolver=resolver,
         asset_analysis_service=asset_analysis,
+        beyondwords_service=beyondwords_tts,
     )
 
     app_state = AppState(

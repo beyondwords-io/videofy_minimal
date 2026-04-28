@@ -21,7 +21,7 @@ from .schemas import (
     TextLine,
 )
 from .settings import Settings
-from .tts_service import ElevenLabsService
+from .tts_service import TTSService
 
 logger = logging.getLogger(__name__)
 
@@ -54,14 +54,16 @@ class PipelineService:
         settings: Settings,
         store: ProjectStore,
         llm_service: LLMService,
-        tts_service: ElevenLabsService,
+        tts_service: TTSService,
         config_resolver: ConfigResolver,
         asset_analysis_service: AssetAnalysisService,
+        beyondwords_service: TTSService | None = None,
     ):
         self.settings = settings
         self.store = store
         self.llm_service = llm_service
         self.tts_service = tts_service
+        self.beyondwords_service = beyondwords_service
         self.config_resolver = config_resolver
         self.asset_analysis_service = asset_analysis_service
 
@@ -474,6 +476,10 @@ class PipelineService:
         manuscript: Manuscript,
         resolved_config: ResolvedConfig,
     ) -> list[Path]:
+        tts = self.tts_service
+        if resolved_config.tts_provider == "beyondwords" and self.beyondwords_service:
+            tts = self.beyondwords_service
+
         rendered_audio_clips: list[Path] = []
         current_timeline_seconds = 0.0
         segment_pause_seconds = (
@@ -510,14 +516,14 @@ class PipelineService:
                     / "audio"
                     / f"line-{text_line.line_id:03}.mp3"
                 )
-                self.tts_service.synthesize_line(
+                tts.synthesize_line(
                     text=text_line.text,
                     output_mp3=line_audio_clip_path,
                     voice_id=resolved_config.voice_id,
                     model_id=resolved_config.tts_model_id,
                     voice_settings=resolved_config.voice_settings,
                 )
-                clip_duration_seconds = self.tts_service.get_duration_seconds(line_audio_clip_path)
+                clip_duration_seconds = tts.get_duration_seconds(line_audio_clip_path)
                 logger.info(
                     "[pipeline:%s] Line %d/%d synthesized",
                     project_id,
@@ -539,7 +545,7 @@ class PipelineService:
                             / "audio"
                             / f"pause-{int(segment_pause_seconds * 1000)}ms.mp3"
                         )
-                        self.tts_service.create_silence_mp3(segment_pause_seconds, pause_audio_clip_path)
+                        tts.create_silence_mp3(segment_pause_seconds, pause_audio_clip_path)
                     rendered_audio_clips.append(pause_audio_clip_path)
                     current_timeline_seconds += segment_pause_seconds
 
@@ -592,7 +598,10 @@ class PipelineService:
 
         logger.info("[pipeline:%s] Step 4/4: Concatenating narration and saving output", project_id)
         full_narration_path = self.store.project_path(project_id) / "output" / "narration.mp3"
-        self.tts_service.concat_mp3(rendered_audio_clips, full_narration_path)
+        tts = self.tts_service
+        if resolved_config.tts_provider == "beyondwords" and self.beyondwords_service:
+            tts = self.beyondwords_service
+        tts.concat_mp3(rendered_audio_clips, full_narration_path)
         logger.info(
             "[pipeline:%s] Narration concatenated (%s)",
             project_id,

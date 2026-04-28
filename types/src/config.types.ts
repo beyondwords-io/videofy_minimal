@@ -39,7 +39,7 @@ const personSchema = z.object({
 });
 
 const audioSchema = z.object({
-  tts: z.union([z.literal("elevenlabs"), z.literal("google")]),
+  tts: z.union([z.literal("elevenlabs"), z.literal("google"), z.literal("beyondwords")]),
   background: backgroundSchema,
   sync_silence: z.number(),
   segment_pause: z.number(),
