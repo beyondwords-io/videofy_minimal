@@ -86,7 +86,7 @@ class ConfigResolver:
         if pause is None:
             pause = float(options.get("segmentPauseSeconds", 0.4))
 
-        tts_provider = str(brand.get("tts_provider", "elevenlabs"))
+        tts_provider = manifest.ttsProvider or str(brand.get("tts_provider", "elevenlabs"))
 
         voice_id_raw = default_person.get("voice")
         voice_settings: dict[str, Any] = {}

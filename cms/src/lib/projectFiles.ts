@@ -6,6 +6,7 @@ export type GenerationManifest = {
   brandId: string;
   promptPack: string;
   voicePack: string;
+  ttsProvider?: "elevenlabs" | "beyondwords" | null;
   options?: {
     orientationDefault?: "vertical" | "horizontal";
     segmentPauseSeconds?: number;

@@ -21,6 +21,7 @@ const manifestSchema = z.object({
   brandId: z.string().min(1),
   promptPack: z.string().min(1),
   voicePack: z.string().min(1),
+  ttsProvider: z.enum(["elevenlabs", "beyondwords"]).nullish(),
   options: z
     .object({
       orientationDefault: z.enum(["vertical", "horizontal"]).optional(),

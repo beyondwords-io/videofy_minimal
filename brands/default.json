@@ -1,5 +1,6 @@
 {
   "brand_name": "Default",
+  "tts_provider": "elevenlabs",
   "openai": {
     "manuscriptModel": "gpt-4o",
     "mediaModel": "gpt-4o"

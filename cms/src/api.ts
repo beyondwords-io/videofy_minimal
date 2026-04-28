@@ -51,10 +51,13 @@ export type RunFetcherResult = {
   command: string[];
 };
 
+export type TtsProvider = "elevenlabs" | "beyondwords";
+
 export type BrandOption = {
   id: string;
   brandName: string;
   scriptPrompt: string;
+  ttsProvider: TtsProvider;
 };
 
 export const getFetchers = async (): Promise<FetcherOption[]> => {
@@ -76,10 +79,12 @@ export const getBrands = async (): Promise<BrandOption[]> => {
 
 export const setProjectBrand = async (
   projectId: string,
-  brandId: string
+  brandId: string,
+  ttsProvider?: TtsProvider
 ): Promise<void> => {
   await axios.patch(`/api/projects/${encodeURIComponent(projectId)}/manifest`, {
     brandId,
+    ...(ttsProvider ? { ttsProvider } : {}),
   });
 };
 

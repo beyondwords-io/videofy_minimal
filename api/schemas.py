@@ -37,6 +37,7 @@ class GenerationManifest(BaseModel):
     brandId: Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$")] = "default"
     promptPack: Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$")] = "default"
     voicePack: Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$")] = "default"
+    ttsProvider: Literal["elevenlabs", "beyondwords"] | None = None
     options: GenerationManifestOptions = Field(default_factory=GenerationManifestOptions)
     createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updatedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

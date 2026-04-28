@@ -13,6 +13,7 @@ import {
   Flex,
   Form,
   Input,
+  Radio,
   Select,
   Spin,
   Typography,
@@ -24,6 +25,7 @@ import {
   getProjects,
   runFetcherPlugin,
   setProjectBrand,
+  TtsProvider,
   useBrands,
   useFetchers,
 } from "@/api";
@@ -35,6 +37,7 @@ const cookies = new Cookies();
 type FormType = {
   fetcherId: string;
   brandId: string;
+  ttsProvider: TtsProvider;
   prompt: string;
   inputs: Record<string, string>;
 };
@@ -104,6 +107,7 @@ const StartPage = () => {
     const initialBrand = brands[0];
     form.setFieldsValue({
       brandId: initialBrand.id,
+      ttsProvider: initialBrand.ttsProvider,
       prompt: initialBrand.scriptPrompt || "",
     });
   }, [brands, form]);
@@ -124,6 +128,7 @@ const StartPage = () => {
     if (nextPrompt !== currentPrompt) {
       form.setFields([{ name: "prompt", value: nextPrompt }]);
     }
+    form.setFields([{ name: "ttsProvider", value: selectedBrand.ttsProvider }]);
     lastSyncedBrandId.current = selectedBrandId;
   }, [brands, form, selectedBrandId]);
 
@@ -135,7 +140,7 @@ const StartPage = () => {
   }, [selectedFetcherId, form]);
 
   const loadManuscript = async (values: FormType) => {
-    const { prompt, fetcherId, brandId } = values;
+    const { prompt, fetcherId, brandId, ttsProvider } = values;
     const customPrompt = (prompt || "").trim();
     const selected = fetchers?.find((fetcher) => fetcher.id === fetcherId);
     if (!selected) {
@@ -158,7 +163,11 @@ const StartPage = () => {
       });
 
       state.loadingMessage = "Applying brand settings...";
-      await setProjectBrand(fetchResult.projectId, brand.id);
+      await setProjectBrand(
+        fetchResult.projectId,
+        brand.id,
+        ttsProvider || brand.ttsProvider
+      );
 
       state.loadingMessage = "Loading project configuration...";
       const [projects, configs] = await Promise.all([getProjects(), getConfigs()]);
@@ -324,6 +333,18 @@ const StartPage = () => {
                 value: brand.id,
                 label: brand.brandName,
               }))}
+            />
+          </Form.Item>
+          <Form.Item
+            name="ttsProvider"
+            label="TTS provider"
+            rules={[{ required: true }]}
+          >
+            <Radio.Group
+              options={[
+                { label: "ElevenLabs", value: "elevenlabs" },
+                { label: "BeyondWords", value: "beyondwords" },
+              ]}
             />
           </Form.Item>
           <Form.Item noStyle>

@@ -5,6 +5,7 @@ import { configRoot } from "@/lib/projectFiles";
 
 const brandConfigSchema = z.object({
   brand_name: z.string().min(1).optional(),
+  tts_provider: z.enum(["elevenlabs", "beyondwords"]).optional(),
   prompts: z
     .object({
       scriptPrompt: z.string().optional(),
@@ -12,10 +13,13 @@ const brandConfigSchema = z.object({
     .optional(),
 });
 
+export type TtsProvider = "elevenlabs" | "beyondwords";
+
 export type BrandOption = {
   id: string;
   brandName: string;
   scriptPrompt: string;
+  ttsProvider: TtsProvider;
 };
 
 function isSafeBrandId(brandId: string): boolean {
@@ -46,6 +50,7 @@ export async function listBrands(): Promise<BrandOption[]> {
         id,
         brandName: parsed.data.brand_name || id,
         scriptPrompt: parsed.data.prompts?.scriptPrompt || "",
+        ttsProvider: parsed.data.tts_provider || "elevenlabs",
       });
     } catch {
       continue;

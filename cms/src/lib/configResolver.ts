@@ -114,6 +114,8 @@ export async function resolveConfigForProject(
     config.audio.segment_pause = options.segmentPauseSeconds;
   }
 
+  config.audio.tts = manifest.ttsProvider ?? (brand.tts_provider as Config["audio"]["tts"]);
+
   if (merged.player && typeof merged.player === "object") {
     config.player = deepMerge(
       (config.player || {}) as Record<string, unknown>,

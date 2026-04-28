@@ -9,6 +9,7 @@ const paramsSchema = z.object({
 
 const patchSchema = z.object({
   brandId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+  ttsProvider: z.enum(["elevenlabs", "beyondwords"]).optional(),
 });
 
 export async function PATCH(
@@ -39,6 +40,7 @@ export async function PATCH(
       brandId: body.brandId,
       promptPack: body.brandId,
       voicePack: body.brandId,
+      ttsProvider: body.ttsProvider ?? null,
       updatedAt: new Date().toISOString(),
     };
     await writeJson(manifestPath, next);

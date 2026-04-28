@@ -85,13 +85,13 @@ def _make_processed_response(content_id: str, audio_url: str = "https://cdn.beyo
     })
 
 
-def test_beyondwords_service_creates_then_updates_then_deletes(tmp_path: Path):
+def test_beyondwords_service_creates_new_content_per_line(tmp_path: Path):
     responses = [
         FakeURLResponse({"id": "abc-123", "status": "queued"}),
         _make_processed_response("abc-123"),
         FakeURLResponse(b"audio-line-1"),
-        FakeURLResponse({"id": "abc-123", "status": "queued"}),
-        _make_processed_response("abc-123", "https://cdn.beyondwords.io/line2.mp3"),
+        FakeURLResponse({"id": "abc-456", "status": "queued"}),
+        _make_processed_response("abc-456", "https://cdn.beyondwords.io/line2.mp3"),
         FakeURLResponse(b"audio-line-2"),
     ]
     call_index = {"i": 0}
@@ -146,5 +146,5 @@ def test_beyondwords_service_passes_body_voice_id(tmp_path: Path):
          patch.object(tts_module.time, "sleep"):
         service.synthesize_line(text="Test", output_mp3=out, voice_id="42")
 
-    assert post_body["body_voice_id"] == 42
-    assert "<p>Test</p>" in post_body["body"]
+    assert post_body["segments"][0]["voice"]["id"] == 42
+    assert "Test" in post_body["segments"][0]["text"]

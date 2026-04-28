@@ -104,7 +104,6 @@ class BeyondWordsService:
         self._project_id = project_id
         self._ffprobe_bin = ffprobe_bin
         self._ffmpeg_bin = ffmpeg_bin
-        self._content_id: str | None = None
 
     def _request(self, method: str, path: str, body: dict[str, Any] | None = None) -> Any:
         url = f"https://api.beyondwords.io/v1/projects/{self._project_id}{path}"
@@ -132,26 +131,28 @@ class BeyondWordsService:
 
         output_mp3.parent.mkdir(parents=True, exist_ok=True)
 
-        payload: dict[str, Any] = {
-            "title": text[:80],
-            "body": f"<p>{text}</p>",
+        body_segment: dict[str, Any] = {
+            "content_type": "text",
+            "section": "title",
+            "text": text,
         }
         if voice_id:
             try:
-                payload["body_voice_id"] = int(voice_id)
+                body_segment["voice"] = {"id": int(voice_id)}
             except (ValueError, TypeError):
                 logger.warning("Invalid BeyondWords voice_id=%s, using project default", voice_id)
 
-        if self._content_id is None:
-            logger.info("Creating BeyondWords content for project=%s", self._project_id)
-            content = self._request("POST", "/content", payload)
-            self._content_id = content["id"]
-            logger.info("BeyondWords content created id=%s, polling for audio", self._content_id)
-        else:
-            logger.info("Updating BeyondWords content id=%s", self._content_id)
-            self._request("PUT", f"/content/{self._content_id}", payload)
+        payload: dict[str, Any] = {
+            "type": "manual_segment",
+            "segments": [body_segment],
+        }
 
-        audio_url = self._poll_for_audio(self._content_id)
+        logger.info("Creating BeyondWords content for project=%s", self._project_id)
+        content = self._request("POST", "/content", payload)
+        content_id = content["id"]
+        logger.info("BeyondWords content created id=%s, polling for audio", content_id)
+
+        audio_url = self._poll_for_audio(content_id)
         self._download_audio(audio_url, output_mp3)
         logger.info("BeyondWords audio downloaded to %s", output_mp3)
 
